@@ -1,0 +1,30 @@
+DISTRIBUTION — GUIDELINE 5
+China mainland remains excluded per your September 29 review. Build 14 adds guided first-run setup, session-row tool icons when multiple tools are tracked, and reliable completion events for Copilot desktop and CLI sessions.
+
+Headroom is a menu bar utility showing AI usage limits and running sessions. It has no Headroom account and collects no data. No demo account is required; optional Copilot usage uses the reviewer's own GitHub account.
+
+FIRST LAUNCH AND SAMPLE DATA
+First launch opens a short setup window: choose Claude, OpenAI Codex or GitHub Copilot, then connect only what you use. Each connection is optional. "Add another tool" returns to the chooser; "Done" closes setup. "Set up later" skips it. "Try sample data" immediately fills the menu bar, panel and widgets with made-up sessions and limits, with no account or folder access required. The panel footer says "Sample data · Turn off". Sample data is also available via Settings > General > "Show sample data" and the empty panel. Setup can be reopened from Settings > General > "Set up tools…".
+
+MENU BAR ONLY
+No Dock icon (LSUIElement). Click the small black menu bar item near the clock to open the panel. Open Headroom from Applications to return to Settings. Quit is in the panel's gear menu. Settings > General offers a compact display and help if macOS hides the item behind the notch.
+
+FOLDER ACCESS (APP SANDBOX)
+Settings > Tools > "Grant access" opens a standard folder picker inside the expected folder. Grants persist as security-scoped bookmarks. Missing folders are not requested:
+1. ~/.claude: Claude Code sessions and context; read-write for optional terminal connection.
+2. ~/Library/Application Support/Claude: Claude app plan usage, read only.
+3. ~/.codex: Codex app and CLI limits/sessions, read only. Headroom never opens the sign-in file or contacts OpenAI.
+4. ~/.copilot: optional Copilot session connection.
+
+COPILOT USAGE AND SESSIONS
+These are separate optional connections in Settings > Tools > GitHub Copilot.
+"Connect GitHub…" uses GitHub's device flow with Headroom's own GitHub App and read-only Plan permission. Headroom fetches monthly usage every 15 minutes, including an organization-paid seat's quota when provided by GitHub. Tokens stay in Headroom's Keychain item. This is the only network feature; nothing is sent to the developer. Sample data shows this without a GitHub account.
+"Session activity" > "Connect sessions…" supports Copilot desktop and CLI sessions. After folder access and a dialog listing every change, it adds ~/.copilot/hooks/headroom.json and a bundled script in ~/.copilot/headroom. Start a new Copilot session after connecting. Completion events briefly expand the menu bar item when "Show moments" is enabled (on by default). Completed records survive process exit so polling can observe them.
+
+OPTIONAL CLAUDE TERMINAL CONNECTION
+Settings > Tools > Claude > Connect backs up ~/.claude/settings.json, adds a status line and hooks, and writes a bundled script to ~/.claude/headroom. It lists every change and requires confirmation first. Both session connections record only session ids, folder paths, event names and usage numbers, never prompts. Scripts are bundled, never downloaded. Disconnect removes what Headroom added.
+
+WIDGETS AND OPENING SESSIONS
+Control-click the desktop > Edit Widgets and search for Headroom. Limits and Sessions widgets read only the app's summary in its App Group container, make no network requests and support labeled sample data. Clicking a widget opens the panel. Clicking a session uses standard claude:// or codex:// URLs or brings its terminal forward; no Apple Events or Accessibility access.
+
+Headroom isn't made by or affiliated with Anthropic, OpenAI or GitHub.

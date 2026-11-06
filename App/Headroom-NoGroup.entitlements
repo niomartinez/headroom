@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!--
+  Release entitlements without the App Group: ad-hoc Release builds (scripts/build-app.sh, fastlane mac check). A group
+  claimed without a Team ID is rejected and the widget exits (1.1 §5.1).
+  Release builds pick one of four variants (Config/Headroom-Variants.xcconfig): with the App Group only when
+  HEADROOM_APP_GROUP is YES (team-signed builds: fastlane mac build, Config/Signing.local.xcconfig), and with
+  network.client only when HEADROOM_GITHUB_CLIENT_ID is set (Copilot usage, 1.1 §4.8). scripts/verify-build.sh checks
+  the signed result. The user grants ~/.claude (read-write, for Connect terminal), the Claude app's folder and
+  ~/.codex (read) through open panels, kept as app-scoped security-scoped bookmarks.
+-->
+<dict>
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<key>com.apple.security.files.bookmarks.app-scope</key>
+	<true/>
+	<key>com.apple.security.files.user-selected.read-write</key>
+	<true/>
+	<key>com.apple.security.network.client</key>
+	<true/>
+</dict>
+</plist>

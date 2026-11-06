@@ -1,0 +1,21 @@
+{
+  "records": [
+    {
+      "source_path": "/Users/me/.claude/projects/-Users-me-code-imported-app/0f0e0d0c-0b0a-4908-8706-050403020100.jsonl",
+      "imported_thread_id": "01a0cd7e-4680-7096-895c-47523b676a3e",
+      "imported_at": 1790154005,
+      "title": "Imported chat"
+    },
+    {
+      "source_path": "/Users/me/.claude/projects/-Users-me-code-continued-app/1f1e1d1c-1b1a-4918-9716-151413121110.jsonl",
+      "imported_thread_id": "01a0cd87-6e40-79cf-866e-904fbebacde4",
+      "imported_at": 1790154605,
+      "title": "Imported chat"
+    },
+    {
+      "source_path": "/Users/me/.claude/projects/-Users-me-code-gone/2f2e2d2c-2b2a-4928-a726-252423222120.jsonl",
+      "imported_thread_id": "01999999-0000-7000-8000-000000000000",
+      "imported_at": 1790150400
+    }
+  ]
+}

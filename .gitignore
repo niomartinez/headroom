@@ -1,0 +1,11 @@
+.DS_Store
+.build/
+build/
+DerivedData/
+*.xcodeproj/
+xcuserdata/
+.swiftpm/
+/renders/
+.claude/worktrees/
+# Maintainer-only agent notes (accounts, release log). Never committed.
+CLAUDE.local.md

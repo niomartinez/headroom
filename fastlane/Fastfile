@@ -1,0 +1,336 @@
+# Headroom's Mac App Store release lanes. Order and the steps that still need a browser:
+# scripts/release/README.md.
+#
+#   fastlane mac check      no Apple contact: metadata limits, screenshots, ad-hoc archive (no App Group)
+#   fastlane mac build      signed Release archive with the App Group, exported as build/export/Headroom.pkg
+#   fastlane mac upload     sends the .pkg to App Store Connect (then TestFlight processing)
+#   fastlane mac metadata   listing text, screenshots, age rating, review notes; no submission
+#   fastlane mac submit     submits the uploaded build for review (confirm:yes required)
+#
+# Every lane that talks to Apple reads the App Store Connect API key from
+# ~/.appstoreconnect/api_key.json, or from ASC_KEY_JSON (a path to such a file, or the JSON itself),
+# in fastlane's format: {"key_id": "...", "issuer_id": "...", "key_filepath": "/path/AuthKey_XXXX.p8",
+# "in_house": false}. "key" (the .p8 contents) works in place of "key_filepath".
+
+require "json"
+require "fileutils"
+require "tmpdir"
+
+# Xcode's toolchain for every xcodebuild / xcrun / xcodegen run, whatever xcode-select says.
+ENV["DEVELOPER_DIR"] = "/Applications/Xcode.app/Contents/Developer"
+
+# The Fastfile is parsed inside fastlane/, lanes run from the repository root: find it either way.
+ROOT = [Dir.pwd, File.expand_path("..", Dir.pwd)].find { |dir| File.exist?(File.join(dir, "project.yml")) } ||
+       raise("Run fastlane from the Headroom repository (the folder with project.yml).")
+
+APP_ID = "com.niomartinez.headroom"
+TEAM_ID = "L237BMXGB6"
+SCHEME = "Headroom"
+PROJECT = File.join(ROOT, "Headroom.xcodeproj")
+BUILD_DIR = File.join(ROOT, "build")
+ARCHIVE = File.join(BUILD_DIR, "Headroom.xcarchive")
+EXPORT_DIR = File.join(BUILD_DIR, "export")
+EXPORT_OPTIONS = File.join(ROOT, "fastlane", "ExportOptions.plist")
+METADATA_DIR = File.join(ROOT, "fastlane", "metadata")
+SCREENSHOTS_DIR = File.join(ROOT, "fastlane", "screenshots")
+RATING_CONFIG = File.join(ROOT, "fastlane", "rating_config.json")
+VERIFY_BUILD = File.join(ROOT, "scripts", "verify-build.sh")
+REVIEW_NOTES = File.join(METADATA_DIR, "review_information", "notes.txt")
+DEFAULT_KEY_JSON = File.expand_path("~/.appstoreconnect/api_key.json")
+
+# App Review contact, read from the environment when metadata is uploaded or the app submitted.
+REVIEW_CONTACT_ENV = {
+  first_name: "HEADROOM_REVIEW_FIRST_NAME",
+  last_name: "HEADROOM_REVIEW_LAST_NAME",
+  phone_number: "HEADROOM_REVIEW_PHONE",
+  email_address: "HEADROOM_REVIEW_EMAIL"
+}.freeze
+
+default_platform(:mac)
+
+platform :mac do
+  desc "No Apple contact: metadata limits and screenshots (scripts/release/check-metadata.rb), then an ad-hoc signed Release archive, verified"
+  lane :check do
+    sh("ruby", File.join(ROOT, "scripts", "release", "check-metadata.rb"), ROOT)
+    sh("plutil", "-lint", EXPORT_OPTIONS)
+    xcodegen!
+    archive = File.join(BUILD_DIR, "Headroom-adhoc.xcarchive")
+    sh(
+      "xcodebuild", "archive",
+      "-project", PROJECT, "-scheme", SCHEME, "-configuration", "Release",
+      "-destination", "generic/platform=macOS",
+      "-archivePath", archive,
+      # Ad hoc, so never the App Group: a group claimed without a Team ID is rejected (1.1 §5.1).
+      "DEVELOPMENT_TEAM=", "CODE_SIGN_STYLE=Manual", "CODE_SIGN_IDENTITY=-", "PROVISIONING_PROFILE_SPECIFIER=",
+      "HEADROOM_APP_GROUP=NO"
+    )
+    sh(VERIFY_BUILD, "--group", "NO", File.join(archive, "Products", "Applications", "Headroom.app"))
+    UI.success("Metadata, screenshots and an ad-hoc Release archive are fine.")
+  end
+
+  desc "Archive a signed Release build and export Headroom.pkg (options: build_number)"
+  lane :build do |options|
+    key = asc_key!
+    xcodegen!
+    build_number = (options[:build_number] || ENV["HEADROOM_BUILD_NUMBER"]).to_s.strip
+    build_number = next_build_number(key).to_s if build_number.empty?
+    UI.message("Building #{marketing_version} (#{build_number})")
+
+    FileUtils.rm_rf([ARCHIVE, EXPORT_DIR])
+    sh(
+      "xcodebuild", "archive",
+      "-project", PROJECT, "-scheme", SCHEME, "-configuration", "Release",
+      "-destination", "generic/platform=macOS",
+      "-archivePath", ARCHIVE,
+      *xcode_auth_args(key),
+      # Command-line settings outrank Config/Headroom-Release.xcconfig's ad-hoc defaults, for the app and the
+      # widget extension alike. Team-signed, so both claim the App Group (1.1 §5.1); both App IDs need the
+      # App Groups capability.
+      "DEVELOPMENT_TEAM=#{TEAM_ID}", "CODE_SIGN_STYLE=Automatic", "CODE_SIGN_IDENTITY=Apple Development",
+      "PROVISIONING_PROFILE_SPECIFIER=", "CURRENT_PROJECT_VERSION=#{build_number}", "HEADROOM_APP_GROUP=YES",
+      # Sign both targets with a profile while archiving, so the export gives the widget extension its own Mac App
+      # Store profile and application identifier (without it the appex ships unprovisioned). A macOS development
+      # profile needs a registered Mac, which Xcode may register (owner approved, 2026-09-25).
+      "PROVISIONING_PROFILE_REQUIRED=YES", "-allowProvisioningDeviceRegistration"
+    )
+    sh(
+      "xcodebuild", "-exportArchive",
+      "-archivePath", ARCHIVE,
+      "-exportPath", EXPORT_DIR,
+      "-exportOptionsPlist", EXPORT_OPTIONS,
+      *xcode_auth_args(key)
+    )
+    pkg = Dir[File.join(EXPORT_DIR, "*.pkg")].first
+    UI.user_error!("The export wrote no .pkg to #{EXPORT_DIR}.") unless pkg
+    # What ships: the widget embedded, entitlements exact with the group, profiles authorizing it, versions equal,
+    # network.client if and only if a GitHub Client ID is set.
+    sh(VERIFY_BUILD, "--group", "YES", pkg)
+    lane_context[:HEADROOM_PKG] = pkg
+    UI.success("Built #{pkg}")
+    pkg
+  end
+
+  desc "Upload the exported .pkg to App Store Connect (options: pkg, altool:true)"
+  lane :upload do |options|
+    key = asc_key!
+    pkg = options[:pkg] || lane_context[:HEADROOM_PKG] || Dir[File.join(EXPORT_DIR, "*.pkg")].first
+    UI.user_error!("No .pkg to upload. Run `fastlane mac build` first, or pass pkg:<path>.") unless pkg && File.exist?(pkg)
+
+    if options[:altool]
+      # altool finds the key by name (AuthKey_<id>.p8) in API_PRIVATE_KEYS_DIR.
+      Dir.mktmpdir("headroom-asc") do |dir|
+        FileUtils.cp(key[:key_filepath], File.join(dir, "AuthKey_#{key[:key_id]}.p8"))
+        sh(
+          { "API_PRIVATE_KEYS_DIR" => dir },
+          "xcrun", "altool", "--upload-app", "--type", "macos", "--file", pkg,
+          "--apiKey", key[:key_id], "--apiIssuer", key[:issuer_id]
+        )
+      end
+    else
+      upload_to_app_store(
+        api_key: connect!(key),
+        app_identifier: APP_ID,
+        platform: "osx",
+        pkg: pkg,
+        skip_metadata: true,
+        skip_screenshots: true,
+        skip_app_version_update: true,
+        submit_for_review: false,
+        run_precheck_before_submit: false,
+        force: true
+      )
+    end
+    UI.success("Uploaded #{File.basename(pkg)}. App Store Connect processes it before it can be submitted.")
+  end
+
+  desc "Upload the listing: text, screenshots, categories, age rating and review notes. Never submits."
+  lane :metadata do |options|
+    key = asc_key!
+    sh("ruby", File.join(ROOT, "scripts", "release", "check-metadata.rb"), ROOT)
+    metadata_path = METADATA_DIR
+    if options[:first_version]
+      # An app's first version can't have "What's New": send a copy of the metadata without release notes.
+      metadata_path = File.join(Dir.mktmpdir("headroom-metadata"), "metadata")
+      FileUtils.cp_r(METADATA_DIR, metadata_path)
+      Dir[File.join(metadata_path, "*", "release_notes.txt")].each { |file| File.delete(file) }
+    end
+    deliver(
+      api_key: connect!(key),
+      app_identifier: APP_ID,
+      platform: "osx",
+      app_version: marketing_version,
+      skip_binary_upload: true,
+      skip_metadata: false,
+      skip_screenshots: options[:skip_screenshots] ? true : false,
+      metadata_path: metadata_path,
+      screenshots_path: SCREENSHOTS_DIR,
+      overwrite_screenshots: true,
+      app_rating_config_path: RATING_CONFIG,
+      app_review_information: review_information(require_contact: false),
+      submit_for_review: false,
+      automatic_release: false,
+      run_precheck_before_submit: false,
+      precheck_include_in_app_purchases: false,
+      force: true
+    )
+  end
+
+  desc "Submit the uploaded build for App Review, released manually. Only after the owner confirms: confirm:yes (options: build_number)"
+  lane :submit do |options|
+    confirmed = options[:confirm].to_s == "yes" || options[:confirm] == true || ENV["HEADROOM_CONFIRM_SUBMIT"] == "yes"
+    unless confirmed
+      UI.user_error!(
+        "Submitting sends Headroom to App Review. Do it only once the owner has confirmed, then run " \
+        "`fastlane mac submit confirm:yes`."
+      )
+    end
+    key = asc_key!
+    review = review_information(require_contact: true)
+    submit_options = {
+      api_key: connect!(key),
+      app_identifier: APP_ID,
+      platform: "osx",
+      app_version: marketing_version,
+      skip_binary_upload: true,
+      skip_metadata: false,
+      skip_screenshots: true,
+      metadata_path: METADATA_DIR,
+      app_rating_config_path: RATING_CONFIG,
+      app_review_information: review,
+      submit_for_review: true,
+      automatic_release: false,
+      # ITSAppUsesNonExemptEncryption is NO in App/Info.plist; this answers the same question.
+      submission_information: { export_compliance_uses_encryption: false, add_id_info_uses_idfa: false },
+      run_precheck_before_submit: false,
+      precheck_include_in_app_purchases: false,
+      force: true
+    }
+    submit_options[:build_number] = options[:build_number].to_s if options[:build_number]
+    deliver(submit_options)
+    UI.success("Submitted for review. Release it by hand in App Store Connect once it's approved.")
+  end
+
+  desc "Render the store screenshots and website assets from synthetic data (no Apple contact)"
+  lane :screenshots do
+    sh(File.join(ROOT, "scripts", "release", "render-assets.sh"))
+  end
+end
+
+# MARK: - Helpers
+
+# The App Store Connect API key, from ASC_KEY_JSON or ~/.appstoreconnect/api_key.json. Fails fast,
+# before anything is built or sent, with what to do.
+def asc_key!
+  source = ENV["ASC_KEY_JSON"].to_s.strip
+  text, origin =
+    if source.empty?
+      [File.exist?(DEFAULT_KEY_JSON) ? File.read(DEFAULT_KEY_JSON, encoding: "UTF-8") : nil, DEFAULT_KEY_JSON]
+    elsif source.start_with?("{")
+      [source, "ASC_KEY_JSON"]
+    else
+      path = File.expand_path(source)
+      [File.exist?(path) ? File.read(path, encoding: "UTF-8") : nil, path]
+    end
+  UI.user_error!(missing_key_message("No App Store Connect API key at #{origin}.")) if text.nil?
+
+  data = begin
+    JSON.parse(text)
+  rescue JSON::ParserError => error
+    UI.user_error!(missing_key_message("#{origin} isn't valid JSON (#{error.message})."))
+  end
+  key_id = data["key_id"].to_s.strip
+  issuer_id = data["issuer_id"].to_s.strip
+  missing = []
+  missing << "key_id" if key_id.empty?
+  missing << "issuer_id" if issuer_id.empty?
+  UI.user_error!(missing_key_message("#{origin} has no #{missing.join(' or ')}.")) unless missing.empty?
+
+  key_path = data["key_filepath"].to_s.strip
+  if key_path.empty?
+    content = data["key"].to_s
+    UI.user_error!(missing_key_message("#{origin} has neither key_filepath nor key.")) if content.strip.empty?
+    # xcodebuild needs the key as a file.
+    key_path = File.join(Dir.tmpdir, "headroom-AuthKey_#{key_id}.p8")
+    # Created owner-only, so the key is never readable by other users, not even briefly.
+    File.write(key_path, content, perm: 0o600)
+    File.chmod(0o600, key_path)
+  else
+    key_path = File.expand_path(key_path)
+    UI.user_error!(missing_key_message("The key file #{key_path} (key_filepath in #{origin}) doesn't exist.")) unless File.exist?(key_path)
+  end
+  { key_id: key_id, issuer_id: issuer_id, key_filepath: key_path }
+end
+
+def missing_key_message(problem)
+  <<~MESSAGE
+    #{problem}
+    Create a key in App Store Connect > Users and Access > Integrations > App Store Connect API
+    (role: Admin, which the cloud-signed export needs), download AuthKey_XXXX.p8, and save this as
+    ~/.appstoreconnect/api_key.json:
+      {"key_id": "XXXX", "issuer_id": "<issuer id>", "key_filepath": "~/.appstoreconnect/private_keys/AuthKey_XXXX.p8", "in_house": false}
+    or point ASC_KEY_JSON at such a file. See scripts/release/README.md.
+  MESSAGE
+end
+
+# Logs fastlane in with the key; the hash it returns goes to deliver / upload_to_app_store.
+def connect!(key)
+  app_store_connect_api_key(
+    key_id: key[:key_id],
+    issuer_id: key[:issuer_id],
+    key_filepath: key[:key_filepath],
+    in_house: false
+  )
+end
+
+# Lets xcodebuild create and download certificates and profiles with the API key.
+def xcode_auth_args(key)
+  [
+    "-allowProvisioningUpdates",
+    "-authenticationKeyPath", key[:key_filepath],
+    "-authenticationKeyID", key[:key_id],
+    "-authenticationKeyIssuerID", key[:issuer_id]
+  ]
+end
+
+def xcodegen!
+  sh("xcodegen", "generate", "--spec", File.join(ROOT, "project.yml"), "--project", ROOT)
+end
+
+# MARKETING_VERSION from project.yml: the version App Store Connect shows.
+def marketing_version
+  version = File.read(File.join(ROOT, "project.yml"), encoding: "UTF-8")[/^\s*MARKETING_VERSION:\s*"?([0-9][0-9.]*)"?\s*$/, 1]
+  UI.user_error!("No MARKETING_VERSION in project.yml.") unless version
+  version
+end
+
+# One more than the newest build App Store Connect has for this version, or 1.
+def next_build_number(key)
+  latest_testflight_build_number(
+    api_key: connect!(key),
+    app_identifier: APP_ID,
+    platform: "osx",
+    version: marketing_version,
+    initial_build_number: 0
+  ).to_i + 1
+end
+
+# Review notes from fastlane/metadata/review_information/notes.txt, plus the contact from the
+# environment (REVIEW_CONTACT_ENV). Submitting needs the contact; uploading metadata doesn't.
+def review_information(require_contact:)
+  info = { notes: File.read(REVIEW_NOTES, encoding: "UTF-8").strip }
+  missing = []
+  REVIEW_CONTACT_ENV.each do |field, variable|
+    value = ENV[variable].to_s.strip
+    if value.empty?
+      missing << variable
+    else
+      info[field] = value
+    end
+  end
+  unless missing.empty?
+    message = "App Review contact not set: #{missing.join(', ')} (see fastlane/.env.example)."
+    UI.user_error!(message) if require_contact
+    UI.important("#{message} Uploading the review notes without it.")
+  end
+  info
+end

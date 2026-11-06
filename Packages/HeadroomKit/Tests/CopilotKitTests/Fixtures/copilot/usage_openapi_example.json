@@ -1,0 +1,3 @@
+{"timePeriod":{"year":2026,"month":9},"user":"octocat","usageItems":[
+ {"product":"Copilot AI Credits","sku":"AI Credit","model":"GPT-5","unitType":"ai-credits","pricePerUnit":0.01,
+  "grossQuantity":412.5,"grossAmount":4.125,"discountQuantity":412.5,"discountAmount":4.125,"netQuantity":0,"netAmount":0}]}

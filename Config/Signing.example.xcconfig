@@ -1,0 +1,23 @@
+// Mac App Store signing for Release builds of Headroom.
+//
+// Copy this file to Config/Signing.local.xcconfig (git-ignored) and fill in your Team ID. Release
+// builds pick it up automatically (Config/Headroom-Release.xcconfig includes it); Debug stays
+// ad-hoc. Delete the local file to go back to ad-hoc Release builds. See docs/app-store.md §2.
+
+// Your 10-character Team ID: developer.apple.com › Account › Membership details.
+DEVELOPMENT_TEAM = XXXXXXXXXX
+
+// Team-signed builds claim the App Group the widgets read from (1.1 §5.1). Both App IDs
+// (com.niomartinez.headroom and com.niomartinez.headroom.widgets) need the App Groups capability.
+HEADROOM_APP_GROUP = YES
+
+// Option A, automatic signing (simplest): Xcode creates and renews the profiles. Needs your
+// Apple ID in Xcode › Settings › Accounts; scripts/build-app.sh then passes
+// -allowProvisioningUpdates. Builds are signed "Apple Development"; Archive › Distribute App
+// re-signs for the store.
+CODE_SIGN_STYLE = Automatic
+CODE_SIGN_IDENTITY = Apple Development
+
+// Option B, manual signing, doesn't fit since 1.1: this file applies to the app and its widget extension
+// alike, and one PROVISIONING_PROFILE_SPECIFIER can't name both targets' profiles. Use option A (or
+// `fastlane mac build`, which signs automatically with the App Store Connect API key).

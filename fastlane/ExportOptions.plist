@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!--
+  `fastlane mac build` exports the Release archive with these options: a Mac App Store package
+  (Headroom.pkg) signed with the team's distribution certificates, which Xcode manages
+  (automatic signing, -allowProvisioningUpdates with the App Store Connect API key). The export
+  only writes the .pkg; `fastlane mac upload` sends it.
+-->
+<dict>
+	<key>method</key>
+	<string>app-store-connect</string>
+	<key>destination</key>
+	<string>export</string>
+	<key>teamID</key>
+	<string>L237BMXGB6</string>
+	<key>signingStyle</key>
+	<string>automatic</string>
+	<key>uploadSymbols</key>
+	<true/>
+	<key>manageAppVersionAndBuildNumber</key>
+	<false/>
+</dict>
+</plist>

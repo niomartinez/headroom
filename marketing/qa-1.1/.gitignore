@@ -1,0 +1,4 @@
+# Playwright self-check screenshots of the website (1440 px and 390 px), made by the S8 stream. Local only:
+# full-page images are large, so nothing here but this file is committed.
+*
+!.gitignore

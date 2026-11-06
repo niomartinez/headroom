@@ -1,0 +1,1 @@
+menu bar,quota,tokens,rate,context window,agent,LLM,chat,developer,session,monitor,widget,terminal

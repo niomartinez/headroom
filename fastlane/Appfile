@@ -1,0 +1,3 @@
+# Headroom on App Store Connect. The API key lives outside the repository (see the Fastfile).
+app_identifier("com.niomartinez.headroom")
+team_id("L237BMXGB6")

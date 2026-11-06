@@ -1,0 +1,32 @@
+Headroom puts your AI usage limits and sessions in the menu bar, so you always know how much room is left before you hit a limit.
+
+A small black pill sits in your menu bar. Its two-ring gauge shows your plan's weekly limit (outer ring) and 5-hour limit (inner ring). Once either one passes 75%, the pill shows the number, in amber and then in red. A pulsing dot and a count tell you how many sessions are working or waiting for you.
+
+Claude's plan limits cover chat, Cowork and Claude Code alike, so the rings reflect everything you use Claude for. Headroom can also show OpenAI Codex's limits and this month's GitHub Copilot usage, and you choose which tool the rings show, or a small gauge for each.
+
+Click the pill for the details:
+• Weekly and 5-hour usage, when each one resets, and a small key that shows which ring is which
+• Every Claude Code, Codex and Copilot CLI session, grouped into Working, Needs you and Idle
+• How full each session's context window is
+• Click a session to open it in the Claude or Codex app, or to bring its terminal forward
+• When the numbers were last updated, and where they came from
+
+Moments: the pill briefly widens to tell you when a session finishes, when one needs your input, or when a limit passes 90%. When a session needs you, the pill keeps saying so until you open the panel, and you can dismiss a session you've already dealt with. You can turn moments off in Settings.
+
+Works with Claude Code, the Claude desktop app, OpenAI Codex and GitHub Copilot.
+• Claude: sessions in the desktop app show up with no setup. Sessions you run in a terminal show up after one click on Connect terminal, which adds a status line and hooks to your settings. Headroom shows you every change before it makes it and keeps a backup, and Disconnect removes exactly what it added.
+• OpenAI Codex: limits and sessions from the Codex app and CLI, read from Codex's session files once you allow its folder. No sign-in.
+• GitHub Copilot: connect GitHub to see this month's Copilot usage, with Headroom's own read-only GitHub sign-in. A Business or Enterprise seat paid by an organization shows its monthly credits. Connect Copilot CLI adds one hook file so Copilot CLI sessions show up too, and Disconnect removes it.
+
+Widgets: add Limits and Sessions widgets to your desktop or Notification Center. They show the same rings and sessions as the panel and refresh on the schedule macOS allows.
+
+Private by design:
+• No Headroom account. Claude and Codex work entirely from files already on your Mac, in the folders you allow.
+• No network connections, unless you connect GitHub to see Copilot usage. Headroom then talks only to GitHub.
+• No data collected: no analytics, no tracking.
+
+Nothing to show yet? Turn on Show sample data in Settings to see Headroom with made-up sessions and limits.
+
+Headroom lives in the menu bar and has no Dock icon. Open it again from Applications to get to Settings. It's free and runs on macOS 14 or later.
+
+Headroom is an independent app. It isn't made by, affiliated with or endorsed by Anthropic, OpenAI or GitHub. Claude and Claude Code are trademarks of Anthropic. OpenAI Codex is a trademark of OpenAI. GitHub Copilot is a trademark of GitHub.

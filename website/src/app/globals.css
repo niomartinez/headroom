@@ -1,0 +1,1229 @@
+@import "tailwindcss";
+
+/* Phones held sideways: wide enough for the tablet layout, too short for its spacing. Touch only,
+   so a short desktop window keeps the desktop layout. */
+@custom-variant short (@media (orientation: landscape) and (max-height: 500px) and (pointer: coarse));
+
+/* Headroom's palette: the niomartinez.com charcoal and warm silver, with the app's own accents. */
+@theme {
+  --color-ink: #171819;
+  --color-ink-deep: #111213;
+  --color-panel: #111111;
+  --color-fg: #f1f0eb;
+  --color-muted: #b3b2ac;
+  --color-subtle: #8f8e88;
+  --color-line: rgb(241 240 235 / 0.09);
+  --color-teal: #5dcaa5;
+  --color-amber: #ef9f27;
+  --color-red: #e24b4a;
+  --color-offwhite: #f1efe8;
+  --color-track: #444441;
+  --color-idle: #5f5e5a;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
+
+  --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root {
+  --gutter: clamp(20px, 5vw, 56px);
+  --max: 1240px;
+  /* SwiftUI's spring(response: 0.45, dampingFraction: 0.78), the pill's own moment spring. */
+  --spring: linear(0, 0.0507, 0.1684, 0.3141, 0.4623, 0.5984, 0.7146, 0.8086, 0.8809, 0.934, 0.9709, 0.995, 1.0094, 1.017, 1.0197, 1.0195, 1.0176, 1.0148, 1.0118, 1.009, 1.0065, 1.0045, 1.0029, 1.0017, 1.0008, 1.0003, 0.9999, 0.9997, 1);
+  --glass: linear-gradient(180deg, rgb(241 240 235 / 0.055), rgb(241 240 235 / 0.018));
+  --glass-border: rgb(241 240 235 / 0.085);
+}
+
+@layer base {
+  html {
+    background: var(--color-ink);
+    color-scheme: dark;
+    scroll-padding-top: 96px;
+    -webkit-text-size-adjust: 100%;
+    scrollbar-color: #4a4a48 var(--color-ink);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-ink);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--color-teal);
+    color: var(--color-ink);
+  }
+
+  a,
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-teal);
+    outline-offset: 4px;
+    border-radius: 6px;
+  }
+}
+
+/* Component classes live in a layer, so Tailwind utilities can override them. */
+@layer components {
+  .wrap {
+    width: 100%;
+    max-width: calc(var(--max) + var(--gutter) * 2);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  .skip-link {
+    position: absolute;
+    left: 12px;
+    top: -60px;
+    z-index: 100;
+    padding: 10px 16px;
+    border-radius: 999px;
+    background: var(--color-fg);
+    color: var(--color-ink);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .skip-link:focus {
+    top: 12px;
+  }
+
+  /* ---------- Type ---------- */
+
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-teal);
+  }
+
+  .display {
+    font-weight: 500;
+    letter-spacing: -0.047em;
+    line-height: 0.98;
+    text-wrap: balance;
+  }
+
+  .section-title {
+    font-size: clamp(34px, 4.6vw, 64px);
+    font-weight: 500;
+    letter-spacing: -0.042em;
+    line-height: 1.04;
+    text-wrap: balance;
+  }
+  /* Phones: about 29 px, so the hero headline (about 41 px) still clearly leads. */
+  @media (max-width: 639px) {
+    .section-title {
+      font-size: clamp(28px, 7.4vw, 32px);
+      line-height: 1.08;
+    }
+  }
+
+  .lede {
+    color: var(--color-muted);
+    font-size: clamp(17px, 1.35vw, 19px);
+    line-height: 1.7;
+    text-wrap: pretty;
+  }
+  @media (max-width: 639px) {
+    .lede {
+      font-size: 16px;
+      line-height: 1.65;
+    }
+  }
+
+  /* ---------- Header ---------- */
+
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    transition:
+      background-color 0.35s ease,
+      border-color 0.35s ease,
+      backdrop-filter 0.35s ease;
+    border-bottom: 1px solid transparent;
+  }
+  .site-header[data-scrolled="true"] {
+    background: rgb(23 24 25 / 0.72);
+    border-bottom-color: var(--color-line);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    backdrop-filter: blur(18px) saturate(1.4);
+  }
+
+  .nav-link {
+    position: relative;
+    padding-block: 10px;
+    color: #c4c3bd;
+    transition: color 0.25s ease;
+  }
+  .nav-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 4px;
+    height: 1.5px;
+    border-radius: 2px;
+    background: var(--color-teal);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.35s var(--ease-out-expo);
+  }
+  .nav-link:hover,
+  .nav-link[aria-current="page"] {
+    color: var(--color-fg);
+  }
+  .nav-link:hover::after,
+  .nav-link[aria-current="page"]::after {
+    transform: scaleX(1);
+  }
+  /* 44 px tall tap targets on phones. */
+  @media (max-width: 639px) {
+    .nav-link {
+      padding-block: 12px;
+    }
+    .nav-link::after {
+      bottom: 6px;
+    }
+  }
+
+  /* ---------- Buttons ---------- */
+
+  .store-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 60px;
+    padding: 10px 12px 10px 20px;
+    border-radius: 999px;
+    border: 1px solid rgb(241 239 232 / 0.16);
+    background:
+      linear-gradient(180deg, rgb(241 239 232 / 0.1), rgb(241 239 232 / 0.035)),
+      rgb(17 18 19 / 0.6);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.08),
+      0 18px 40px -18px rgb(0 0 0 / 0.7);
+    color: var(--color-offwhite);
+    white-space: nowrap;
+    cursor: default;
+    user-select: none;
+  }
+  /* A slimmer badge on phones. */
+  @media (max-width: 639px) {
+    .store-button {
+      min-height: 54px;
+      gap: 12px;
+      padding: 8px 10px 8px 16px;
+    }
+    .store-button strong {
+      font-size: 16px;
+    }
+    .store-button .free-pill {
+      height: 28px;
+      padding-inline: 11px;
+    }
+  }
+  /* Keeps the badge on one line inside the closing card on 320 px phones. */
+  @media (max-width: 359px) {
+    .store-button {
+      gap: 10px;
+      padding-left: 14px;
+    }
+  }
+  .store-button small {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: #a9a8a2;
+    line-height: 1.2;
+  }
+  .store-button strong {
+    display: block;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+  .free-pill {
+    display: inline-flex;
+    align-items: center;
+    height: 30px;
+    padding-inline: 12px;
+    border-radius: 999px;
+    background: rgb(93 202 165 / 0.14);
+    color: var(--color-teal);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .round-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 60px;
+    padding-right: 6px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--color-fg);
+  }
+  .round-link .circle {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--color-teal);
+    color: var(--color-ink);
+    transition:
+      transform 0.45s var(--ease-out-expo),
+      background-color 0.3s ease;
+  }
+  .round-link:hover .circle {
+    background: #7fd9ba;
+    transform: translateY(3px);
+  }
+
+  .text-link {
+    color: var(--color-fg);
+    text-decoration: underline;
+    text-decoration-color: rgb(241 240 235 / 0.35);
+    text-underline-offset: 4px;
+    transition: text-decoration-color 0.25s ease, color 0.25s ease;
+  }
+  .text-link:hover {
+    color: var(--color-teal);
+    text-decoration-color: var(--color-teal);
+  }
+
+  /* ---------- Hero ---------- */
+
+  .hero-glow {
+    position: absolute;
+    inset: -20% -10% auto;
+    height: 900px;
+    pointer-events: none;
+    background:
+      radial-gradient(40% 50% at 72% 30%, rgb(93 202 165 / 0.1), transparent 70%),
+      radial-gradient(35% 40% at 90% 60%, rgb(239 159 39 / 0.07), transparent 70%);
+    z-index: -1;
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      translate: 0 26px;
+    }
+  }
+  @keyframes fade-up-soft {
+    from {
+      opacity: 0;
+      translate: 0 40px;
+      scale: 0.985;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .intro-rise {
+      animation: rise 1s var(--ease-out-expo) both;
+      animation-delay: var(--d, 0ms);
+    }
+    .intro-scene {
+      animation: fade-up-soft 1.2s var(--ease-out-expo) 0.25s both;
+    }
+  }
+
+  /* ---------- Scene: a faux desktop with the live pill ---------- */
+
+  .scene {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: clamp(20px, 2.4vw, 32px);
+    border: 1px solid rgb(241 240 235 / 0.1);
+    background:
+      radial-gradient(55% 75% at 12% 100%, rgb(93 202 165 / 0.2), transparent 70%),
+      radial-gradient(45% 65% at 92% 8%, rgb(239 159 39 / 0.14), transparent 70%),
+      radial-gradient(60% 60% at 55% 55%, rgb(120 116 170 / 0.1), transparent 70%),
+      linear-gradient(180deg, #1f2123, #131415);
+    box-shadow:
+      0 50px 120px -40px rgb(0 0 0 / 0.8),
+      inset 0 1px 0 rgb(255 255 255 / 0.05);
+  }
+  .scene::after {
+    /* A faint grain so the gradients don't band. */
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.06;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  .menubar {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    height: 40px;
+    padding-inline: 16px 18px;
+    background: rgb(24 25 27 / 0.55);
+    border-bottom: 1px solid rgb(255 255 255 / 0.05);
+    -webkit-backdrop-filter: blur(24px) saturate(1.5);
+    backdrop-filter: blur(24px) saturate(1.5);
+    color: #e9e7e0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-geist-sans), system-ui, sans-serif;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  /* Menus that don't fit (while a moment widens the pill, say) wrap onto a clipped second line,
+     so a whole menu disappears instead of being cut mid-word. */
+  .menubar-menus {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    align-items: center;
+    column-gap: 20px;
+    height: 100%;
+    min-width: 0;
+    overflow: hidden;
+    color: rgb(233 231 224 / 0.86);
+  }
+  .menubar-menus > * {
+    flex: none;
+    line-height: 40px;
+  }
+  .menubar-menus b {
+    font-weight: 650;
+    color: #f1efe8;
+  }
+  .menubar-status {
+    flex: none;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: rgb(233 231 224 / 0.9);
+  }
+
+  .desktop-window {
+    position: absolute;
+    left: 4%;
+    top: 84px;
+    width: 46%;
+    border-radius: 16px;
+    border: 1px solid rgb(255 255 255 / 0.08);
+    background: rgb(13 14 15 / 0.7);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 30px 70px -30px rgb(0 0 0 / 0.8);
+  }
+
+  @keyframes caret {
+    0%,
+    49% {
+      opacity: 1;
+    }
+    50%,
+    100% {
+      opacity: 0;
+    }
+  }
+  .caret {
+    display: inline-block;
+    width: 8px;
+    height: 15px;
+    border-radius: 1.5px;
+    background: rgb(241 239 232 / 0.75);
+    vertical-align: -2px;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .caret {
+      animation: caret 1.1s steps(1) infinite;
+    }
+  }
+
+  .panel-stage {
+    perspective: 1400px;
+  }
+  .panel-card {
+    position: relative;
+    transform-style: preserve-3d;
+    /* The panel's 18 pt corners on its 360 x 350 pt size. */
+    border-radius: calc(18 / 360 * 100%) / calc(18 / 350 * 100%);
+    box-shadow:
+      0 50px 80px -30px rgb(0 0 0 / 0.75),
+      0 10px 24px -8px rgb(0 0 0 / 0.45),
+      0 0 0 1px rgb(255 255 255 / 0.06);
+  }
+  .panel-open {
+    transform-origin: 88% 0;
+    transition:
+      opacity 0.28s ease,
+      transform 0.55s var(--spring),
+      visibility 0s linear 0s;
+  }
+  .panel-open[data-open="false"] {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.965);
+    visibility: hidden;
+    transition:
+      opacity 0.2s ease,
+      transform 0.3s ease,
+      visibility 0s linear 0.3s;
+  }
+  @keyframes panel-drop {
+    from {
+      opacity: 0;
+      transform: translateY(-14px) scale(0.955);
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    [data-intro="true"] .panel-open {
+      animation: panel-drop 0.75s var(--spring) 1.75s both;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .panel-open,
+    .panel-open[data-open="false"] {
+      transform: none;
+      transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+    }
+  }
+
+  .panel-glare {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: var(--glare-opacity, 0);
+    background: radial-gradient(420px circle at var(--glare-x, 50%) var(--glare-y, 0%), rgb(255 255 255 / 0.09), transparent 45%);
+    transition: opacity 0.4s ease;
+    mix-blend-mode: screen;
+  }
+
+  .menubar .pill {
+    --s: 1.12;
+  }
+  @media (min-width: 640px) {
+    .menubar .pill {
+      --s: 1.3;
+    }
+  }
+  /* Room for the widest moment ("harbor needs you") beside the clock on small phones. */
+  @media (max-width: 399px) {
+    .menubar {
+      padding-inline: 14px 16px;
+    }
+    .menubar-status {
+      gap: 12px;
+    }
+  }
+  @media (max-width: 359px) {
+    .menubar .pill {
+      --s: 1;
+    }
+  }
+
+  /* A live pulse over each working dot of the panel image (dot = 7 pt of the 360 pt panel). */
+  .panel-pulse {
+    position: absolute;
+    width: calc(7 / 360 * 100%);
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    pointer-events: none;
+  }
+  .panel-pulse .dot-ring {
+    border-width: 1.5px;
+  }
+
+  /* ---------- The pill (a replica of PillView: 22 pt tall, 9 pt padding, 7 pt gaps) ---------- */
+
+  .pill {
+    --s: 1;
+    --pill-h: calc(22px * var(--s));
+    display: inline-flex;
+    align-items: stretch;
+    height: var(--pill-h);
+    padding-inline: calc(2px * var(--s)) calc(9px * var(--s));
+    border-radius: 999px;
+    background: #000;
+    color: var(--color-offwhite);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-geist-sans), system-ui, sans-serif;
+    font-size: calc(12px * var(--s));
+    font-weight: 500;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    box-shadow: 0 0 0 0.5px rgb(255 255 255 / 0.07);
+  }
+
+  .pill-slot {
+    display: inline-grid;
+    grid-template-columns: 0fr;
+    transition: grid-template-columns 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+  }
+  .pill-slot[data-open="true"] {
+    grid-template-columns: 1fr;
+  }
+  .pill-slot > span {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .pill-part {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    visibility: hidden;
+  }
+  .pill-slot[data-open="true"] .pill-part {
+    visibility: visible;
+  }
+  .pill-status {
+    gap: calc(5px * var(--s));
+    padding-inline: calc(7px * var(--s));
+  }
+  .pill-moment {
+    gap: calc(7px * var(--s));
+    padding-inline: calc(7px * var(--s));
+  }
+  .pill-badge .pill-part {
+    padding-left: calc(7px * var(--s));
+  }
+  .pill-rings {
+    flex: none;
+    align-self: center;
+    width: calc(18px * var(--s));
+    height: calc(18px * var(--s));
+  }
+  .pill-icon {
+    width: calc(13px * var(--s));
+    height: calc(13px * var(--s));
+    flex: none;
+  }
+  .pill-check {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+  .pill[data-kind="finished"] .pill-check {
+    stroke-dashoffset: 0;
+    animation: pill-check-draw 0.3s ease-in-out both;
+  }
+  @keyframes pill-check-draw {
+    from { stroke-dashoffset: 1; }
+    to { stroke-dashoffset: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pill-slot,
+    .pill-check,
+    .pill[data-kind="finished"] .pill-check,
+    .pill-part,
+    .pill-slot[data-open="true"] .pill-part {
+      transition: none;
+      animation: none;
+    }
+  }
+
+  /* The status dot and its ring: grows to 2.6x (ease-out) while fading 0.9 to 0 (linear), every 1.6 s. */
+  .dot {
+    position: relative;
+    flex: none;
+    width: calc(7px * var(--s, 1));
+    height: calc(7px * var(--s, 1));
+    border-radius: 50%;
+    background: var(--dot-color, var(--color-teal));
+  }
+  .dot-ring {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 260%;
+    height: 260%;
+    margin: -130% 0 0 -130%;
+    border-radius: 50%;
+    border: 1.25px solid var(--color-teal);
+    opacity: 0;
+    pointer-events: none;
+  }
+  @keyframes pulse-grow {
+    from {
+      transform: scale(0.385);
+    }
+    to {
+      transform: scale(1);
+    }
+  }
+  @keyframes pulse-fade {
+    from {
+      opacity: 0.9;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .dot-ring {
+      animation:
+        pulse-grow 1.6s cubic-bezier(0.333, 0.667, 0.667, 1) infinite,
+        pulse-fade 1.6s linear infinite;
+    }
+  }
+  [data-paused="true"] .dot-ring,
+  [data-paused="true"] .caret {
+    animation-play-state: paused;
+  }
+
+  /* The two-ring gauge: arcs start at 12 o'clock and run clockwise (pathLength 100). */
+  .ring-arc {
+    fill: none;
+    stroke-linecap: round;
+    transition:
+      stroke-dasharray 0.9s var(--ease-out-expo),
+      stroke 0.4s ease;
+  }
+  @keyframes ring-sweep {
+    from {
+      stroke-dasharray: 0 100;
+    }
+  }
+  /* The weekly arc turns amber as it passes 75 % (31 % of the way through the eased sweep). */
+  @keyframes ring-tone-warning {
+    0%,
+    29% {
+      stroke: var(--color-offwhite);
+    }
+    34%,
+    100% {
+      stroke: var(--color-amber);
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    [data-intro="true"] .ring-arc {
+      animation: ring-sweep 1.3s var(--ease-out-expo) 0.45s both;
+    }
+    [data-intro="true"] .ring-arc[data-tone="warning"] {
+      animation:
+        ring-sweep 1.3s var(--ease-out-expo) 0.45s both,
+        ring-tone-warning 1.3s linear 0.45s both;
+    }
+    [data-intro="true"] .pill-badge {
+      animation: slot-open 0.7s var(--spring) 1.55s both;
+    }
+    [data-intro="true"] .pill-badge .pill-part {
+      animation: part-in 0.35s ease 1.7s both;
+    }
+    /* Below-the-fold rings sweep in when revealed (see RevealObserver). */
+    .reveal-pending .ring-arc,
+    .reveal-pending.ring-arc {
+      stroke-dasharray: 0 100;
+    }
+    .is-revealed .ring-arc {
+      animation: ring-sweep 1.4s var(--ease-out-expo) var(--sweep-delay, 0.25s) both;
+    }
+  }
+  @keyframes slot-open {
+    from {
+      grid-template-columns: 0fr;
+    }
+    to {
+      grid-template-columns: 1fr;
+    }
+  }
+  @keyframes part-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .pill-button {
+    display: inline-flex;
+    flex: none;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: transform 0.3s var(--ease-out-expo);
+  }
+  .pill-button:active {
+    transform: scale(0.97);
+  }
+  .pill-button:focus-visible {
+    outline-offset: 3px;
+    border-radius: 999px;
+  }
+  /* A finger-sized target around the 25 px pill. The pill sits about 8 px below the top of the
+     scene, which clips, so the target reaches down more than up: 44 px or more in all. */
+  @media (pointer: coarse) {
+    .pill-button {
+      position: relative;
+    }
+    .pill-button::after {
+      content: "";
+      position: absolute;
+      inset: -7px -6px -13px;
+    }
+  }
+
+  /* ---------- Surfaces ---------- */
+
+  .glass-card {
+    position: relative;
+    isolation: isolate;
+    border-radius: 24px;
+    border: 1px solid var(--glass-border);
+    background: var(--glass);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+    overflow: hidden;
+  }
+  .glass-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0;
+    background: radial-gradient(360px circle at var(--mx, 50%) var(--my, 0%), rgb(93 202 165 / 0.1), transparent 60%);
+    transition: opacity 0.4s ease;
+  }
+  .glass-card:hover::before {
+    opacity: 1;
+  }
+  @media (hover: none) {
+    .glass-card::before {
+      display: none;
+    }
+  }
+
+  .label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-subtle);
+  }
+  .label b {
+    color: var(--color-teal);
+    font-weight: 600;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 30px;
+    padding-inline: 12px;
+    border-radius: 999px;
+    border: 1px solid rgb(241 240 235 / 0.1);
+    background: rgb(0 0 0 / 0.35);
+    color: #d9d8d2;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .bar {
+    position: relative;
+    height: 5px;
+    border-radius: 99px;
+    background: var(--color-track);
+    overflow: hidden;
+  }
+  .bar > i {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--w);
+    border-radius: inherit;
+    background: var(--bar-color, var(--color-offwhite));
+  }
+  @keyframes bar-fill {
+    from {
+      width: 0;
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal-pending .bar > i {
+      width: 0;
+    }
+    .is-revealed .bar > i {
+      animation: bar-fill 1.2s var(--ease-out-expo) var(--bar-delay, 0.3s) both;
+    }
+  }
+
+  /* ---------- Scroll reveal: only for elements that start below the fold ---------- */
+
+  @media (prefers-reduced-motion: no-preference) {
+    [data-reveal].reveal-pending {
+      opacity: 0;
+      translate: 0 28px;
+    }
+    [data-reveal].is-revealed {
+      opacity: 1;
+      translate: 0 0;
+      transition:
+        opacity 0.9s ease,
+        translate 1s var(--ease-out-expo);
+      transition-delay: var(--d, 0ms);
+    }
+  }
+
+  /* ---------- Steps ---------- */
+
+  .steps-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 23px;
+    height: 1px;
+    background: linear-gradient(90deg, var(--color-teal), rgb(93 202 165 / 0.2) 70%, transparent);
+    transform-origin: left;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .steps-line.reveal-pending {
+      transform: scaleX(0);
+    }
+    .steps-line.is-revealed {
+      transition:
+        opacity 0.9s ease,
+        transform 1.8s var(--ease-out-expo) 0.15s;
+    }
+  }
+
+  /* On phones the steps stack, number beside title, joined by a vertical line. */
+  @media (max-width: 639px) {
+    .step:not(:last-child)::before {
+      content: "";
+      position: absolute;
+      left: 17.5px;
+      top: 44px;
+      bottom: -16px;
+      width: 1px;
+      background: linear-gradient(180deg, rgb(93 202 165 / 0.5), rgb(93 202 165 / 0.08));
+    }
+  }
+
+  /* ---------- Phone carousels (features) ---------- */
+
+  @media (max-width: 639px) {
+    .snap-row {
+      display: flex;
+      gap: 12px;
+      margin-inline: calc(var(--gutter) * -1);
+      padding-inline: var(--gutter);
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: var(--gutter);
+      scrollbar-width: none;
+    }
+    .snap-row::-webkit-scrollbar {
+      display: none;
+    }
+    .snap-row > * {
+      flex: 0 0 84%;
+      scroll-snap-align: start;
+      /* A fast fling moves one card, not three. */
+      scroll-snap-stop: always;
+    }
+    .snap-row:focus-visible {
+      outline-offset: -2px;
+      border-radius: 0;
+    }
+  }
+  /* Each dot is a button with a 24 x 24 px target around the 6 px dot. */
+  .snap-dot-button {
+    display: grid;
+    place-items: center;
+    padding: 9px;
+    border-radius: 99px;
+    cursor: pointer;
+  }
+  .snap-dot-button:focus-visible {
+    outline-offset: -2px;
+  }
+  .snap-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 99px;
+    background: rgb(241 240 235 / 0.2);
+    transition:
+      width 0.5s var(--spring),
+      background-color 0.3s ease;
+  }
+  .snap-dot[data-active="true"] {
+    width: 20px;
+    background: var(--color-teal);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .snap-dot {
+      transition: none;
+    }
+  }
+
+  /* ---------- Gallery ---------- */
+
+  .gallery {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: min(84vw, 680px);
+    gap: 20px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--gutter);
+    padding-inline: var(--gutter);
+    padding-bottom: 18px;
+    scrollbar-width: thin;
+    scrollbar-color: #3b3b39 transparent;
+  }
+  @media (min-width: 1352px) {
+    .gallery {
+      padding-inline: calc((100vw - var(--max)) / 2);
+      scroll-padding-inline: calc((100vw - var(--max)) / 2);
+    }
+  }
+  .gallery > figure {
+    scroll-snap-align: start;
+  }
+  /* On phones the dots under the strip show the position, so no scrollbar gutter. */
+  @media (max-width: 639px) {
+    .gallery {
+      align-items: start;
+      padding-bottom: 0;
+      scrollbar-width: none;
+    }
+    .gallery > figure {
+      scroll-snap-stop: always;
+    }
+    .gallery::-webkit-scrollbar {
+      display: none;
+    }
+    .gallery:focus-visible {
+      outline-offset: -2px;
+      border-radius: 0;
+    }
+  }
+  .shot {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    border-radius: 22px;
+    overflow: hidden;
+    border: 1px solid rgb(241 240 235 / 0.09);
+    background:
+      radial-gradient(70% 90% at 15% 100%, rgb(93 202 165 / 0.16), transparent 70%),
+      radial-gradient(60% 80% at 90% 0%, rgb(239 159 39 / 0.1), transparent 70%),
+      linear-gradient(180deg, #232426, #161718);
+  }
+  /* On phones a 16:10 card leaves a portrait render too small to read: go square. (Landscape
+     renders keep 16:10; a square would only add empty space around them.) The store screenshots
+     switch to a 4:5 crop of the panel and the pill (see Screenshots), so they fill a 4:5 card. */
+  @media (max-width: 639px) {
+    .shot[data-fit="contain"][data-portrait="true"] {
+      aspect-ratio: 1;
+    }
+    .shot[data-fit="cover"][data-phone-crop="true"] {
+      aspect-ratio: 4 / 5;
+    }
+  }
+  .shot img {
+    transition: transform 0.9s var(--ease-out-expo);
+  }
+  .gallery > figure:hover .shot img {
+    transform: scale(1.025);
+  }
+
+  /* ---------- FAQ ---------- */
+
+  .faq-item {
+    border-bottom: 1px solid var(--color-line);
+  }
+  .faq-item summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 24px 0;
+    cursor: pointer;
+    list-style: none;
+    font-size: clamp(17px, 1.6vw, 20px);
+    font-weight: 500;
+    letter-spacing: -0.015em;
+  }
+  .faq-item summary::-webkit-details-marker {
+    display: none;
+  }
+  .faq-item summary .plus {
+    position: relative;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid rgb(241 240 235 / 0.16);
+    transition:
+      transform 0.45s var(--ease-out-expo),
+      background-color 0.3s ease,
+      border-color 0.3s ease;
+  }
+  .faq-item summary .plus::before,
+  .faq-item summary .plus::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 12px;
+    height: 1.5px;
+    margin: -0.75px 0 0 -6px;
+    border-radius: 2px;
+    background: currentColor;
+  }
+  .faq-item summary .plus::after {
+    transform: rotate(90deg);
+  }
+  .faq-item[open] summary .plus {
+    transform: rotate(45deg);
+    background: rgb(93 202 165 / 0.14);
+    border-color: rgb(93 202 165 / 0.4);
+    color: var(--color-teal);
+  }
+  .faq-item summary:hover .plus {
+    border-color: rgb(241 240 235 / 0.35);
+  }
+  .faq-item .answer {
+    padding: 0 56px 26px 0;
+    color: var(--color-muted);
+    font-size: 16px;
+    line-height: 1.75;
+  }
+  @media (max-width: 639px) {
+    .faq-item summary {
+      gap: 16px;
+      padding: 18px 0;
+    }
+    .faq-item .answer {
+      padding: 0 8px 22px 0;
+      line-height: 1.7;
+    }
+  }
+  @supports (interpolate-size: allow-keywords) {
+    .faq-list {
+      interpolate-size: allow-keywords;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .faq-item::details-content {
+        height: 0;
+        overflow: clip;
+        transition:
+          height 0.5s var(--ease-out-expo),
+          content-visibility 0.5s allow-discrete;
+      }
+      .faq-item[open]::details-content {
+        height: auto;
+      }
+    }
+  }
+
+  /* ---------- Documents (privacy, support) ---------- */
+
+  .doc h2 {
+    margin-top: 56px;
+    margin-bottom: 14px;
+    font-size: clamp(24px, 2.4vw, 30px);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+  }
+  .doc h3 {
+    margin-top: 30px;
+    margin-bottom: 8px;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .doc p,
+  .doc li {
+    color: var(--color-muted);
+    font-size: 17px;
+    line-height: 1.75;
+  }
+  .doc p + p,
+  .doc ul + p,
+  .doc ol + p {
+    margin-top: 14px;
+  }
+  .doc ul {
+    margin-top: 12px;
+    padding-left: 0;
+    list-style: none;
+  }
+  .doc ul > li {
+    position: relative;
+    padding-left: 22px;
+  }
+  .doc ul > li + li {
+    margin-top: 8px;
+  }
+  .doc ul > li::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 0.78em;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-teal);
+  }
+  .doc strong {
+    color: var(--color-fg);
+    font-weight: 600;
+  }
+  .doc code {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: rgb(241 240 235 / 0.07);
+    color: #e3e2dc;
+    overflow-wrap: anywhere;
+  }
+  .doc a {
+    color: var(--color-fg);
+    text-decoration: underline;
+    text-decoration-color: rgb(93 202 165 / 0.6);
+    text-underline-offset: 4px;
+  }
+  .doc a:hover {
+    color: var(--color-teal);
+  }
+
+  .toc a {
+    display: block;
+    padding: 6px 0;
+    color: var(--color-subtle);
+    font-size: 14px;
+    transition: color 0.2s ease;
+  }
+  .toc a:hover {
+    color: var(--color-fg);
+  }
+}

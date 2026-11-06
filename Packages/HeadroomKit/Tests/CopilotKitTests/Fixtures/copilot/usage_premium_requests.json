@@ -1,0 +1,4 @@
+{"timePeriod":{"year":2026,"month":9},"user":"octocat","usageItems":[
+ {"product":"Copilot","sku":"Copilot Premium Request","model":"GPT-5","unitType":"requests","pricePerUnit":0.04,
+  "grossQuantity":180,"grossAmount":7.2,"discountQuantity":180,"discountAmount":7.2,"netQuantity":0,"netAmount":0},
+ {"product":"Copilot","sku":"Copilot Premium Request","model":"Claude Example","unitType":"Requests","grossQuantity":42,"netQuantity":0}]}

@@ -1,0 +1,90 @@
+{
+  "aborted": {
+    "created": "2026-09-23T13:12:00.000Z",
+    "id": "01a0ce64-fd00-7a2d-81c6-81df8f5f5a94"
+  },
+  "cli_source": {
+    "created": "2026-09-23T13:00:00.000Z",
+    "id": "01a0ce5a-0080-7c8e-8bad-6e909b3add14"
+  },
+  "context_over_window": {
+    "created": "2026-09-23T13:18:00.000Z",
+    "id": "01a0ce6a-7b40-7265-8e8e-c5f4b5a5a770"
+  },
+  "error_usage_limit": {
+    "created": "2026-09-23T13:14:00.000Z",
+    "id": "01a0ce66-d1c0-7751-8160-6c8d73d32a18"
+  },
+  "estimate_token_count": {
+    "created": "2026-09-23T13:16:00.000Z",
+    "id": "01a0ce68-a680-773f-8e0b-193d8f8ce211"
+  },
+  "exec_source": {
+    "created": "2026-09-23T12:55:00.000Z",
+    "id": "01a0ce55-6ca0-721f-8347-ff2e653210c0"
+  },
+  "guardian": {
+    "created": "2026-09-23T12:50:00.000Z",
+    "id": "01a0ce50-d8c0-7dde-86e8-974b46a1eddc"
+  },
+  "imported_claude": {
+    "created": "2026-09-23T09:00:00.000Z",
+    "id": "01a0cd7e-4680-7096-895c-47523b676a3e"
+  },
+  "imported_claude_continued": {
+    "created": "2026-09-23T09:10:00.000Z",
+    "id": "01a0cd87-6e40-79cf-866e-904fbebacde4"
+  },
+  "legacy_flat": {
+    "created": "2026-09-23T08:00:00.000Z",
+    "id": "01a0cd47-5800-7bd7-8eb5-7fa2f2275f31"
+  },
+  "legacy_resets_in_seconds": {
+    "created": "2026-09-23T09:00:00.000Z",
+    "id": "01a0cd7e-4680-7cb9-806f-9929e160f3a5"
+  },
+  "missing_limit_id": {
+    "created": "2026-09-23T08:40:00.000Z",
+    "id": "01a0cd6b-f700-704f-80a3-5de10337e078"
+  },
+  "missing_window_minutes": {
+    "created": "2026-09-23T08:30:00.000Z",
+    "id": "01a0cd62-cf40-72d3-8912-3e934fe954fa"
+  },
+  "mixed_codex_spark": {
+    "created": "2026-09-23T12:00:00.000Z",
+    "id": "01a0ce23-1200-76a8-8b16-42ac3a896ed1"
+  },
+  "open_turn": {
+    "created": "2026-09-23T13:10:00.000Z",
+    "id": "01a0ce63-2840-794b-8e7b-caac52f119c5"
+  },
+  "plus_5h_weekly": {
+    "created": "2026-09-23T10:00:00.000Z",
+    "id": "01a0cdb5-3500-7eec-8529-5f75fffebd3e"
+  },
+  "premium_null": {
+    "created": "2026-09-23T12:10:00.000Z",
+    "id": "01a0ce2c-39c0-7181-84bb-fd528d2acb88"
+  },
+  "pro_weekly_primary": {
+    "created": "2026-09-23T11:00:00.000Z",
+    "id": "01a0cdec-2380-78db-81b4-21a521714cc3"
+  },
+  "rate_limits_null": {
+    "created": "2026-09-23T12:20:00.000Z",
+    "id": "01a0ce35-6180-7dc6-8051-83d860a53304"
+  },
+  "rolloutid_suffix": {
+    "created": "2026-09-23T13:05:00.000Z",
+    "id": "01a0ce5e-9460-7102-84c5-9b0ac081f446"
+  },
+  "subagent": {
+    "created": "2026-09-23T12:40:00.000Z",
+    "id": "01a0ce47-b100-794a-8168-d2da574b00ec"
+  },
+  "unknown_line_types": {
+    "created": "2026-09-23T13:19:00.000Z",
+    "id": "01a0ce6b-65a0-76ff-8b52-20173cc988bd"
+  }
+}

@@ -1,0 +1,7 @@
+{"timePeriod":{"year":2026,"month":9},"user":"octocat","usageItems":[
+ {"product":"Copilot AI Credits","sku":"AI Credit","model":"GPT-5","unitType":"ai-credits","grossQuantity":100,"netQuantity":0},
+ {"product":"Copilot AI Credits","sku":"AI Credit","model":"Claude Example","unitType":"ai_credits","grossQuantity":250.25,"netQuantity":0},
+ {"sku":"AI Credit","unitType":"AI_Credits","grossQuantity":60,"netQuantity":0},
+ {"product":"Copilot AI Credits","unitType":"AI Credits","grossQuantity":1.75,"netQuantity":0},
+ {"product":"Actions","sku":"Linux minutes","unitType":"minutes","grossQuantity":9999,"netQuantity":9999},
+ {"product":"Copilot AI Credits","sku":"AI Credit","grossQuantity":5000,"netQuantity":5000}]}

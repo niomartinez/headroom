@@ -1,0 +1,165 @@
+# XcodeGen spec for the Headroom app and its widget extension (spec §4, 1.1 §5.2). Generate with
+# `xcodegen generate`, or build with scripts/build-app.sh. The generated Headroom.xcodeproj is not committed.
+name: Headroom
+
+options:
+  bundleIdPrefix: com.niomartinez
+  deploymentTarget:
+    macOS: "14.0"
+  developmentLanguage: en
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    # The app and the widget extension must carry the same versions: set them here only, never on a target.
+    MARKETING_VERSION: 1.1.2
+    CURRENT_PROJECT_VERSION: 19
+    HEADROOM_DISPLAY_NAME: Headroom
+    HEADROOM_URL_SCHEME: com.niomartinez.headroom
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    # Headroom's own GitHub App ("Headroom for Mac", owner @niomartinez, App ID 5071739; 1.1 §4.2). Public, not a
+    # secret. Goes into Info.plist as HeadroomGitHubClientID; while it is set, Release builds carry
+    # com.apple.security.network.client (Config/Headroom-Variants.xcconfig, checked by scripts/verify-build.sh).
+    # Empty = no Copilot usage and no network.
+    HEADROOM_GITHUB_CLIENT_ID: Iv23liEA5ZycifEXDZCT
+    # Ad-hoc signing ("Sign to Run Locally"); in effect only for the logic test bundle. The Headroom
+    # app and HeadroomWidgets targets take their signing from Config/Headroom-{Debug,Release}.xcconfig,
+    # which outrank these project settings: Debug is always ad-hoc; Release is ad-hoc unless
+    # Config/Signing.local.xcconfig (git-ignored, copied from Config/Signing.example.xcconfig) sets
+    # a team for the Mac App Store. Never set signing in those targets' settings below:
+    # target settings outrank the xcconfig. See docs/app-store.md.
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    ENABLE_HARDENED_RUNTIME: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    DEAD_CODE_STRIPPING: YES
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: NO
+  configs:
+    Debug:
+      HEADROOM_DISPLAY_NAME: Headroom Dev
+      HEADROOM_URL_SCHEME: com.niomartinez.headroom.dev
+
+packages:
+  HeadroomKit:
+    path: Packages/HeadroomKit
+
+targets:
+  Headroom:
+    type: application
+    platform: macOS
+    sources:
+      - path: App/Sources
+      - path: App/Assets.xcassets
+      - path: App/PrivacyInfo.xcprivacy
+        buildPhase: resources
+      - path: App/Info.plist
+        buildPhase: none
+      - path: App/Headroom.entitlements
+        buildPhase: none
+      - path: App/Headroom-Offline.entitlements
+        buildPhase: none
+      - path: App/Headroom-NoGroup.entitlements
+        buildPhase: none
+      - path: App/Headroom-NoGroup-Offline.entitlements
+        buildPhase: none
+      - path: App/Headroom-Debug.entitlements
+        buildPhase: none
+    dependencies:
+      - package: HeadroomKit
+        product: HeadroomKit
+      # Embeds HeadroomWidgets.appex in Contents/PlugIns.
+      - target: HeadroomWidgets
+    # Signing (team, style, identity, profile) for this target only; see the note above.
+    configFiles:
+      Debug: Config/Headroom-Debug.xcconfig
+      Release: Config/Headroom-Release.xcconfig
+    settings:
+      base:
+        PRODUCT_NAME: Headroom
+        PRODUCT_BUNDLE_IDENTIFIER: com.niomartinez.headroom
+        # Copilot CLI sessions (1.1 F3, gate G2), like the package's define (Packages/HeadroomKit/Package.swift):
+        # remove both to compile Copilot CLI out.
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) HEADROOM_COPILOT_CLI"
+        INFOPLIST_FILE: App/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        COMBINE_HIDPI_IMAGES: YES
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
+      configs:
+        # Debug is not sandboxed: it reads ~/.claude and ~/Library/Application Support/Claude
+        # directly, so it can be tested without clicking through open panels (spec §4).
+        Debug:
+          PRODUCT_BUNDLE_IDENTIFIER: com.niomartinez.headroom.dev
+          CODE_SIGN_ENTITLEMENTS: App/Headroom-Debug.entitlements
+        # Release is sandboxed the way the App Store build ships, without the debugger
+        # entitlement (get-task-allow) that Xcode would otherwise inject when signing locally. The
+        # variant (App Group, network) comes from Config/Headroom-Variants.xcconfig.
+        Release:
+          CODE_SIGN_ENTITLEMENTS: App/Headroom$(HEADROOM_GROUP_SUFFIX)$(HEADROOM_NETWORK_SUFFIX).entitlements
+          CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
+    scheme:
+      testTargets:
+        - HeadroomLogicTests
+
+  # The Limits and Sessions widgets (1.1 §5). Reads only the file the app writes into the App Group
+  # container; links HeadroomWidgetKit, which has no kit that reads user folders or talks to the network.
+  # Always sandboxed; the App Group only in team-signed builds (HEADROOM_APP_GROUP, Config/Headroom-Variants.xcconfig).
+  HeadroomWidgets:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: Widgets/Sources
+      - path: Widgets/PrivacyInfo.xcprivacy
+        buildPhase: resources
+      - path: Widgets/Info.plist
+        buildPhase: none
+      - path: Widgets/HeadroomWidgets.entitlements
+        buildPhase: none
+      - path: Widgets/HeadroomWidgets-NoGroup.entitlements
+        buildPhase: none
+    dependencies:
+      - package: HeadroomKit
+        product: HeadroomWidgetKit
+    # The app's signing files, so both are signed alike.
+    configFiles:
+      Debug: Config/Headroom-Debug.xcconfig
+      Release: Config/Headroom-Release.xcconfig
+    settings:
+      base:
+        PRODUCT_NAME: HeadroomWidgets
+        PRODUCT_BUNDLE_IDENTIFIER: com.niomartinez.headroom.widgets
+        INFOPLIST_FILE: Widgets/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        SKIP_INSTALL: YES
+        CODE_SIGN_ENTITLEMENTS: Widgets/HeadroomWidgets$(HEADROOM_GROUP_SUFFIX).entitlements
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks"
+      configs:
+        Debug:
+          PRODUCT_BUNDLE_IDENTIFIER: com.niomartinez.headroom.dev.widgets
+        Release:
+          CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
+
+  # Hostless unit tests for the app's pure logic (App/Sources/Logic), plus the poll's background
+  # worker and the Copilot service with its Keychain store (App/Sources/Services), which only use Logic and
+  # HeadroomKit. Run with scripts/test-app.sh.
+  HeadroomLogicTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: App/Sources/Logic
+      - path: App/Sources/StatusItem/PillHost.swift
+      - path: App/Sources/StatusItem/StatusItemLengthAnimator.swift
+      - path: App/Sources/Model/SnapshotWorker.swift
+      - path: App/Sources/Services
+      - path: App/Tests
+    dependencies:
+      - package: HeadroomKit
+        product: HeadroomKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.niomartinez.headroom.logic-tests
+        GENERATE_INFOPLIST_FILE: YES
+        ENABLE_HARDENED_RUNTIME: NO
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) HEADROOM_COPILOT_CLI"

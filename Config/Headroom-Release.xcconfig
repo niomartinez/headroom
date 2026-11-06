@@ -1,0 +1,14 @@
+// Signing for the Headroom app and widget targets, Release. Ad-hoc by default, so
+// `scripts/build-app.sh Release` works without an Apple Developer team (and without the App Group). For
+// Mac App Store signing, copy Signing.example.xcconfig to Signing.local.xcconfig (git-ignored, next to
+// this file) and fill it in; its values replace these, HEADROOM_APP_GROUP included. project.yml stays
+// untouched. See docs/app-store.md.
+
+#include "Headroom-Variants.xcconfig"
+
+DEVELOPMENT_TEAM =
+CODE_SIGN_STYLE = Manual
+CODE_SIGN_IDENTITY = -
+PROVISIONING_PROFILE_SPECIFIER =
+
+#include? "Signing.local.xcconfig"

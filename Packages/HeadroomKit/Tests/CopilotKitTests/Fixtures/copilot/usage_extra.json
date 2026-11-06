@@ -1,0 +1,3 @@
+{"timePeriod":{"year":2026,"month":9},"user":"octocat","usageItems":[
+ {"product":"Copilot AI Credits","sku":"AI Credit","model":"GPT-5","unitType":"ai-credits","grossQuantity":1500,"netQuantity":0},
+ {"product":"Copilot AI Credits","sku":"AI Credit","model":"GPT-5","unitType":"ai-credits","grossQuantity":120,"netQuantity":120}]}

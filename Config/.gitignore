@@ -1,0 +1,2 @@
+# Personal signing settings (Team ID, identity, profile). Start from Signing.example.xcconfig.
+Signing.local.xcconfig

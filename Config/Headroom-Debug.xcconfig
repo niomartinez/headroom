@@ -1,0 +1,10 @@
+// Signing for the Headroom app and widget targets, Debug. Always ad-hoc ("Sign to Run Locally"): Debug
+// builds are unsandboxed development builds (the widget extension is sandboxed, without an App Group) and
+// never need a team. See docs/app-store.md.
+
+#include "Headroom-Variants.xcconfig"
+
+DEVELOPMENT_TEAM =
+CODE_SIGN_STYLE = Manual
+CODE_SIGN_IDENTITY = -
+PROVISIONING_PROFILE_SPECIFIER =

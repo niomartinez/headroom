@@ -1,0 +1,25 @@
+// Build switches shared by the Headroom app and its widget extension (1.1 §5.1, §4.8). Included first by
+// Headroom-Debug.xcconfig and Headroom-Release.xcconfig, so Signing.local.xcconfig and the command line
+// (`fastlane mac build` passes HEADROOM_APP_GROUP=YES) can override them.
+
+// App Group: YES only for team-signed builds. A group claimed without a Team ID is rejected and the widget exits,
+// so Debug, `scripts/build-app.sh Release` and `fastlane mac check` keep NO. Picks the entitlements variant through
+// the suffix: App/Headroom<suffix>.entitlements, Widgets/HeadroomWidgets<suffix>.entitlements.
+HEADROOM_APP_GROUP = NO
+HEADROOM_GROUP_SUFFIX_YES =
+HEADROOM_GROUP_SUFFIX_NO = -NoGroup
+HEADROOM_GROUP_SUFFIX = $(HEADROOM_GROUP_SUFFIX_$(HEADROOM_APP_GROUP))
+
+// The group as Info.plist names it (HeadroomAppGroup), for WidgetShare.groupIdentifier(). The entitlements files
+// spell it $(TeamIdentifierPrefix)com.niomartinez.headroom, which only signing expands; Info.plist gets it from the
+// team instead, and empty without the group. scripts/verify-build.sh checks that both agree.
+HEADROOM_APP_GROUP_ID_YES = $(DEVELOPMENT_TEAM).com.niomartinez.headroom
+HEADROOM_APP_GROUP_ID_NO =
+HEADROOM_APP_GROUP_ID = $(HEADROOM_APP_GROUP_ID_$(HEADROOM_APP_GROUP))
+
+// Network: `com.apple.security.network.client` if and only if HEADROOM_GITHUB_CLIENT_ID (project.yml) is set.
+// An empty Client ID looks up HEADROOM_NETWORK_SUFFIX_ (-Offline); a set one looks up
+// HEADROOM_NETWORK_SUFFIX_<Client ID>, which is undefined, so the suffix is empty and the app entitlements with
+// network.client are used. The widget extension never gets the network.
+HEADROOM_NETWORK_SUFFIX_ = -Offline
+HEADROOM_NETWORK_SUFFIX = $(HEADROOM_NETWORK_SUFFIX_$(HEADROOM_GITHUB_CLIENT_ID))

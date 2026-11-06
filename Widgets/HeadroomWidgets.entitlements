@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!--
+  The widget extension, team-signed: sandboxed, reading the file the app writes into the App Group container
+  (1.1 §5.1, §8). Picked when HEADROOM_APP_GROUP is YES.
+-->
+<dict>
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>$(TeamIdentifierPrefix)com.niomartinez.headroom</string>
+	</array>
+</dict>
+</plist>

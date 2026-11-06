@@ -1,0 +1,11 @@
+# fastlane output
+report.xml
+Preview.html
+README.md
+test_output/
+# Local secrets: never commit an API key or review contact details.
+.env
+.env.*
+!.env.example
+*.p8
+api_key.json

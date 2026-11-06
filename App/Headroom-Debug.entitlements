@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!--
+  Debug entitlements: deliberately NOT sandboxed (spec §4). Debug builds read ~/.claude and
+  ~/Library/Application Support/Claude directly, so the app can be tested without granting
+  folders through open panels. Release uses Headroom.entitlements.
+-->
+<dict/>
+</plist>
