@@ -9,6 +9,8 @@ export const site = {
   email: "hello@niomartinez.com",
   owner: "Nio Martinez",
   ownerUrl: "https://niomartinez.com",
+  /** The public source repository (MIT). */
+  sourceUrl: "https://github.com/niomartinez/headroom",
   minimumSystem: "macOS 14 or later",
   /** The App Store build's sandbox container (bundle ID com.niomartinez.headroom). */
   containerPath: "~/Library/Containers/com.niomartinez.headroom",
